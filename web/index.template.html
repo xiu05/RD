@@ -344,6 +344,7 @@ document.addEventListener('focusout',()=>{if(pendingRender){setTimeout(()=>{if(!
 
 /* ---------- helpers ---------- */
 const info=()=>S.info;
+const nm=sd=>{const p=S.people.find(x=>x.side===sd&&/^(The )?(Groom|Bride)$/.test(x.role||''));const v=((p&&p.name)||'').trim();return v||(S.info.sample?(sd==='Groom'?S.info.groom:S.info.bride):'')||''};
 const fmtMoney=n=>(S.info.cur||'')+' '+Math.round(+n||0).toLocaleString('id-ID');
 const fmtShort=n=>{n=+n||0;const a=Math.abs(n);const c=S.info.cur||'';return a>=1e9?c+' '+(n/1e9).toFixed(1).replace(/\.0$/,'')+'B':a>=1e6?c+' '+(n/1e6).toFixed(1).replace(/\.0$/,'')+'M':a>=1e3?c+' '+Math.round(n/1e3)+'K':c+' '+Math.round(n)};
 const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
@@ -413,11 +414,11 @@ V.home={render(){
   const where=i.ev.rec.venue||i.ev.holy.venue;const long=w?w.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
   const cer=i.ev.holy.time||i.ev.rec.time;
   const hl=L.headline==="Let's celebrate love, laughter, and happily ever after!"?'':L.headline;
-  const invite=L.invite||`Together with our families, we, ${i.groom||'the groom'} and ${i.bride||'the bride'}, joyfully invite you to celebrate our union in marriage.`;
+  const invite=L.invite||`Together with our families, we, ${nm('Groom')||'the groom'} and ${nm('Bride')||'the bride'}, joyfully invite you to celebrate our union in marriage.`;
   return `<section class="sec hero2">${coverImg(L.hero)}<div class="veil"></div>
     <div class="tl"><button class="btn light sm" data-act="custom">Customize</button></div>
     <div class="cn"><div class="eyebrow">${esc(L.eyebrow)}</div>
-      <h2 class="names2 ${L.font==='serif'?'serif':'script'}">${esc(i.groom||'Groom')} <span>&amp;</span> ${esc(i.bride||'Bride')}</h2>
+      <h2 class="names2 ${L.font==='serif'?'serif':'script'}">${esc(nm('Groom')||'Groom')} <span>&amp;</span> ${esc(nm('Bride')||'Bride')}</h2>
       <div class="dt">${dstr}</div>${where?`<div class="tg">${esc(where)}</div>`:''}
       <div class="cd">${d==null?'':d<0?`${-d} days since the wedding`:d===0?'Today is the day':`${d} days to go`}</div>
       <div class="tg">${esc(L.tagline)}</div>
@@ -452,7 +453,7 @@ V.event={render(){
   const evs=[['eng','Engagement / Ting Fen'],['morn','Morning session'],['holy','Holy Matrimony'],['rec','Wedding reception']];
   return head('The <em>event</em>','Names, dates and venues. Everything else in the planner reads from here.')+
   `<div class="card"><h3>Couple &amp; money</h3><div class="form">
-    ${f('Groom','groom')}${f('Groom phone / WA','gPhone','tel')}${f('Bride','bride')}${f('Bride phone / WA','bPhone','tel')}
+    <p class="sub full" style="grid-column:1/-1;margin:0">The couple's names and phone numbers come from the <a href="#people">Family</a> tab (the Groom and Bride rows), so you only enter them once.</p>
     ${f('Wedding date','date','date')}${f('Engagement date','engDate','date')}${f('Total budget','budget','number')}${f('Currency symbol','cur')}
   </div></div>
   <div class="tbl sec2" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${evs.map(([k,l])=>`<div class="card"><h3>${l}</h3><div class="form" style="grid-template-columns:1fr 1fr">${f('Date','ev.'+k+'.date','date')}${f('Time','ev.'+k+'.time','time')}<div style="grid-column:span 2">${f('Venue','ev.'+k+'.venue')}</div><div style="grid-column:span 2">${f('Address','ev.'+k+'.addr')}</div></div></div>`).join('')}</div>`}};
@@ -465,8 +466,8 @@ V.people={render(){normPeople();return head('Family <em>&amp; party</em>','Each 
   list(){
     const side=(sd,nm)=>{const all=S.people.filter(r=>r.side===sd),rows=all.filter(r=>matches(r,ui.q));const named=all.filter(r=>r.name).length;
       return `<div><div class="sechead" style="margin-top:0"><h2>${esc(nm||sd)}’s side <span class="mono mut" style="font-size:11px">${named}/${all.length} named</span></h2><button class="btn sm lime" data-act="add" data-m="people" data-side="${sd}">+ Add</button></div>${grid('people',PEOPLE_COLS,rows,'No one matches.')}</div>`};
-    $('#list').innerHTML=side('Groom',S.info.groom)+side('Bride',S.info.bride);
-    S.people.forEach(p=>{if((p.role==='Groom'||p.role==='Bride')&&!p.name){const el=$(`[data-m="people"][data-id="${p.id}"][data-f="name"]`);if(el)el.placeholder=(p.role==='Groom'?S.info.groom:S.info.bride)||'Full name'}})}};
+    $('#list').innerHTML=side('Groom',nm('Groom'))+side('Bride',nm('Bride'));
+    S.people.forEach(p=>{if(p.role==='Groom'||p.role==='Bride'){const el=$(`[data-m="people"][data-id="${p.id}"][data-f="name"]`);if(el)el.placeholder='Name used on the cover'}})}};
 
 V.tasks={render(){
   return head('<em>Tasks</em>','Ideal timeline from your master checklist. Due dates follow the wedding date. Tap the circle to cycle to do, doing and done.',`<input class="search" id="q" placeholder="Search tasks" value="${esc(ui.q)}">${pills(['Open','Overdue','Done','All'],ui.tf,'tf')}`)+`<div id="sum"></div><div id="list"></div>`},
@@ -656,6 +657,7 @@ document.addEventListener('change',e=>{
   if(m==='info'){setPath(S.info,t.dataset.p,val);if(t.dataset.p!=='cur'||1)S.info.sample=false;save('info');return}
   const arr=m==='rd'?S.rundown[ui.ev].rows:S[m];const r=arr.find(x=>x.id===t.dataset.id);if(!r)return;
   r[t.dataset.f]=val;save(m==='rd'?'rundown':m);
+  if(m==='people'&&t.dataset.f==='name'&&S.info.sample){S.info.sample=false;save('info')}
   if(m==='packing')V.packing.list();else if(V[cur].upd)V[cur].upd();
   if(m==='check')V.tasks.sum();
 });
