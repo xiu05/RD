@@ -1,4 +1,4 @@
-<title>Prestige Planner</title>
+<title>Vowly</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,7 +152,7 @@ input.num{text-align:right;font-family:var(--f-m)}
 
 <div class="app" id="app">
   <aside class="rail">
-    <div class="logo">Prestige<i>.</i>Planner</div>
+    <div class="logo">Vowly<i>.</i></div>
     <nav class="nav" id="nav" aria-label="Sections"></nav>
     <div class="sp"></div>
     <div class="sync" id="sync"><span class="dot"></span><span>Starting…</span></div>
@@ -205,7 +205,7 @@ function freshState(){
   return S;
 }
 let S=null;
-try{const raw=ls.get('prestige.planner.v1');if(raw){S=JSON.parse(raw);KEYS.forEach(k=>{if(S[k]==null)throw 0})}}catch(e){S=null}
+try{const raw=ls.get('vowly.planner.v1');if(raw){S=JSON.parse(raw);KEYS.forEach(k=>{if(S[k]==null)throw 0})}}catch(e){S=null}
 if(!S)S=freshState();
 
 /* ---------- persistence: this device + cloud (db) ---------- */
@@ -217,7 +217,7 @@ function setSync(){
   const b=$('#cloudbadge');if(b)b.innerHTML=`<span class="dot ${m[0]}"></span>${m[1]}`;
 }
 function save(k){
-  ls.set('prestige.planner.v1',JSON.stringify(S));
+  ls.set('vowly.planner.v1',JSON.stringify(S));
   if(!dbc){return}
   dirty.add(k);cloud='busy';setSync();clearTimeout(timer);timer=setTimeout(flush,700);
 }
@@ -250,7 +250,7 @@ async function initCloud(){
       });
       if(!snap.metadata.fromCache&&firstSnap){firstSnap=false;KEYS.forEach(k=>{if(!seen.has(k))dirty.add(k)});if(dirty.size)flush()}
       if(!snap.metadata.fromCache&&!dirty.size&&!Object.values(flight).some(Boolean)){cloud='on'}
-      ls.set('prestige.planner.v1',JSON.stringify(S));setSync();
+      ls.set('vowly.planner.v1',JSON.stringify(S));setSync();
       if(changed)softRender();
     },e=>{cloud='off';setSync()});
   }catch(e){cloud='off';setSync()}
@@ -324,7 +324,7 @@ V.home={render(){
   const up=S.check.filter(x=>x.st!==2).map(x=>({x,d:dueDate(x.when)})).sort((a,b)=>(a.d?+a.d:9e15)-(b.d?+b.d:9e15)).slice(0,6);
   const pct=st.total?Math.round(st.done/st.total*100):0, bpct=i.budget?Math.min(100,Math.round(st.price/i.budget*100)):0;
   const unseated=S.guests.filter(g=>!g.table).length;
-  const mq=Array(8).fill('THE PRESTIGE ORGANIZER ✦ MASTER WEDDING PLANNER ✦ ').join('');
+  const mq=Array(8).fill('VOWLY ✦ MASTER WEDDING PLANNER ✦ ').join('');
   return `<div class="mq" aria-hidden="true"><div>${mq}${mq}</div></div>
   <div class="hero">
     <div class="card names tint-pink" style="background:var(--card)">
@@ -426,7 +426,7 @@ V.guests={render(){
     $('#list').innerHTML=`<div class="tools" style="margin-bottom:8px">${pills(['All','Pending','Yes','No'],ui.rsvp,'rsvp')}</div>`+grid('guests',GCOLS,S.guests.filter(r=>matches(r,ui.q)&&(ui.rsvp==='All'||(r.rsvp||'Pending')===ui.rsvp)),'No guests yet. Add one, or use Paste list to drop in many names at once.');
   },
   seating(){
-    const cap=+ls.get('prestige.cap')||10;const tabs={};S.guests.forEach(g=>{if(g.table){(tabs[g.table]=tabs[g.table]||[]).push(g)}});
+    const cap=+ls.get('vowly.cap')||10;const tabs={};S.guests.forEach(g=>{if(g.table){(tabs[g.table]=tabs[g.table]||[]).push(g)}});
     const names=Object.keys(tabs).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));const un=S.guests.filter(g=>!g.table);
     $('#list').innerHTML=`<div class="tools" style="margin-bottom:10px"><label class="mono mut" style="font-size:11px">SEATS PER TABLE <input class="fld num" id="cap" type="number" min="1" value="${cap}" style="width:64px;border-color:var(--line)"></label><button class="btn lime" data-act="autoseat">Auto-seat ${un.length} unseated</button></div>
     <div class="tbl">${names.map(n=>{const p=tabs[n].reduce((a,g)=>a+(+g.pax||0),0);return `<div class="card tcard"><div class="hd"><span>Table ${esc(n)}</span><span class="chip ${p>cap?'bad':p===cap?'ok':''}">${p}/${cap}</span></div><div class="bar2" style="margin-bottom:4px"><i style="width:${Math.min(100,p/cap*100)}%;background:${p>cap?'var(--bad)':'var(--vio)'}"></i></div>${tabs[n].map(g=>`<div class="g"><span>${esc(g.name||'—')}</span><span class="mono mut">${g.pax||1}</span></div>`).join('')}</div>`}).join('')||'<div class="empty">No tables yet. Auto-seat will create them.</div>'}</div>
@@ -484,7 +484,7 @@ const main=$('#main');
 function setPath(o,p,v){const ks=p.split('.');const l=ks.pop();ks.forEach(k=>o=o[k]);o[l]=v}
 document.addEventListener('change',e=>{
   const t=e.target;if(t.id==='rstart'){S.rundown[ui.ev].start=t.value;save('rundown');V.rundown.list();return}
-  if(t.id==='cap'){ls.set('prestige.cap',t.value);V.guests.seating();return}
+  if(t.id==='cap'){ls.set('vowly.cap',t.value);V.guests.seating();return}
   const m=t.dataset&&t.dataset.m;if(!m)return;
   let val=t.type==='checkbox'?t.checked:t.type==='number'?(t.value===''?'':parseFloat(t.value)):t.value;
   if(m==='info'){setPath(S.info,t.dataset.p,val);if(t.dataset.p!=='cur'||1)S.info.sample=false;save('info');return}
@@ -506,7 +506,7 @@ const A={
   mv(el){const rows=S.rundown[ui.ev].rows,i=rows.findIndex(r=>r.id===el.dataset.id),j=i+ +el.dataset.d;if(j<0||j>=rows.length)return;[rows[i],rows[j]]=[rows[j],rows[i]];save('rundown');V.rundown.list()},
   payfull(el){const v=S.vendors.find(x=>x.id===el.dataset.id);v.paid=v.price;if(v.st!=='Paid off')v.st='Paid off';save('vendors');V.money.list();toast('Marked as paid')},
   addpack(){prompt2('New item for '+ui.packWho,t=>{if(!t)return;S.packing.push({id:uid(),who:ui.packWho,phase:'Global',t,done:false});save('packing');V.packing.list()})},
-  autoseat(){const cap=+ls.get('prestige.cap')||10;const un=S.guests.filter(g=>!g.table).sort((a,b)=>(a.side+a.tag).localeCompare(b.side+b.tag));
+  autoseat(){const cap=+ls.get('vowly.cap')||10;const un=S.guests.filter(g=>!g.table).sort((a,b)=>(a.side+a.tag).localeCompare(b.side+b.tag));
     const used={};S.guests.forEach(g=>{if(g.table)used[g.table]=(used[g.table]||0)+(+g.pax||1)});
     let n=1;const nextT=()=>{while((used[n]||0)>=cap)n++;return n};
     un.forEach(g=>{const p=+g.pax||1;let t=nextT();if((used[t]||0)+p>cap&&(used[t]||0)>0){n++;t=nextT()}g.table=String(t);used[t]=(used[t]||0)+p});
@@ -517,7 +517,7 @@ const A={
   theme(){const r=document.documentElement;const dark=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=dark?'light':'dark'},
   backup(){modal(`<h3>Backup &amp; restore</h3><p class="mut" style="margin:0 0 8px">Your plan is saved on this device and, when you are signed in, in the cloud so your partner and team see the same data. Copy this text to keep a backup, or paste a backup here to restore it.</p><textarea id="bk">${esc(JSON.stringify(S))}</textarea><div class="tools" style="margin-top:10px"><button class="btn" data-act="bkcopy">Copy</button><button class="btn" data-act="bksave">Save file</button><button class="btn lime" data-act="bkrestore">Restore from text</button><button class="btn" data-act="bkreset">${resetArm?'Tap again to wipe':'Reset to blank template'}</button><button class="btn ghost" data-act="close">Close</button></div>`)},
   bkcopy(){const t=$('#bk');navigator.clipboard.writeText(t.value).then(()=>toast('Copied'),()=>{t.select();toast('Press copy on your keyboard')})},
-  async bksave(){const d=JSON.stringify(S,null,1);try{const dl=await window.claude.use('downloads');if(dl){await dl.save({filename:'prestige-planner-backup.json',data:d});return}}catch(e){}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));a.download='prestige-planner-backup.json';a.click()},
+  async bksave(){const d=JSON.stringify(S,null,1);try{const dl=await window.claude.use('downloads');if(dl){await dl.save({filename:'vowly-backup.json',data:d});return}}catch(e){}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));a.download='vowly-backup.json';a.click()},
   bkrestore(){try{const n=JSON.parse($('#bk').value);KEYS.forEach(k=>{if(n[k]==null)throw new Error('missing '+k)});S=n;KEYS.forEach(save);closeModal();render();toast('Restored')}catch(e){toast('That backup text is not valid')}},
   bkreset(){if(!resetArm){resetArm=true;A.backup();return}resetArm=false;S=freshState();KEYS.forEach(save);closeModal();render();toast('Blank template loaded')}
 };
