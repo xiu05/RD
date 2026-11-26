@@ -424,11 +424,6 @@ V.home={render(){
       ${i.sample?`<a class="btn light sm" href="#event" style="margin-top:6px">Sample details · make it yours</a>`:''}
       ${L.hero&&mimg(L.hero)?'':`<button class="btn light sm" data-act="custom" style="margin-top:2px">Add your photo</button>`}
     </div></section>
-  <section class="invite"><div class="in"><div class="gr">
-    <div class="ph">${L.portrait&&mimg(L.portrait)?`<img src="${esc(mimg(L.portrait))}" alt="">`:`<button class="btn sm" data-act="custom">Add photo</button>`}</div>
-    <div>${hl?`<h2>${esc(hl)}</h2>`:''}<p>${esc(invite)}</p>
-      <p class="fine">${long?esc(long):''}${cer?`<br>Ceremony starts at ${esc(cer)}`:''}${where?`<br>${esc(where)}`:''}</p></div>
-  </div></div></section>
   <section class="sec sched">${coverImg(L.band)}<div class="veil" style="background:rgba(12,10,6,.62)"></div><div class="cn in"><h2>${esc(L.schedTitle)}</h2>
     ${ev?`<div class="tline">${ev}</div>`:'<p style="text-align:center;opacity:.8">Add steps in Rundown and they appear here.</p>'}
     <p style="text-align:center;margin:26px 0 0" class="eyebrow">${esc(EVN[L.sched]||'')} · from ${esc(rd.start)}</p></div></section>
@@ -676,8 +671,8 @@ const A={
     modal(`<h3 style="font-size:26px">Customize your page</h3><div class="form">
       <div class="full"><label>Colour theme</label><div class="themes" style="margin-top:6px">${Object.entries(THEMES).map(([k,[c,n]])=>`<button style="background:${c}" data-act="lktheme" data-v="${k}" aria-pressed="${L.theme===k}" title="${n}" aria-label="${n}"></button>`).join('')}</div></div>
       <div class="full"><label>Couple names style<select class="fld" data-lk="font"><option value="script"${L.font==='script'?' selected':''}>Script</option><option value="serif"${L.font==='serif'?' selected':''}>Serif italic</option></select></label></div>
-      <div class="full" style="display:grid;gap:8px"><label>Photos</label>${slot('hero','Cover photo','Wide, behind the names')}${slot('portrait','Portrait','Next to the invitation')}${slot('band','Schedule background','Behind the day schedule')}${slot('qband','Quote background','Behind the quote')}</div>
-      ${f('Line above names','eyebrow')}${f('Line below','tagline')}${f('Invitation headline (optional)','headline',1)}${f('Invitation text (blank = automatic)','invite',1,1)}
+      <div class="full" style="display:grid;gap:8px"><label>Photos</label>${slot('hero','Cover photo','Wide, behind the names')}${slot('band','Schedule background','Behind the day schedule')}${slot('qband','Quote background','Behind the quote')}</div>
+      ${f('Line above names','eyebrow')}${f('Line below','tagline')}
       ${f('Schedule title','schedTitle')}<div><label>Schedule shows<select class="fld" data-lk="sched">${Object.entries(EVN).map(([k,n])=>`<option value="${k}"${L.sched===k?' selected':''}>${n}</option>`).join('')}</select></label></div>
       ${f('Quote (optional)','quote',1,1)}${f('Quote by','quoteBy')}
     </div><input type="file" id="lkf" accept="image/*" hidden><div class="tools" style="margin-top:16px"><button class="btn pri" data-act="close">Done</button></div>`)},
