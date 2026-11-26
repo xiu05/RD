@@ -457,9 +457,16 @@ V.event={render(){
   </div></div>
   <div class="tbl sec2" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${evs.map(([k,l])=>`<div class="card"><h3>${l}</h3><div class="form" style="grid-template-columns:1fr 1fr">${f('Date','ev.'+k+'.date','date')}${f('Time','ev.'+k+'.time','time')}<div style="grid-column:span 2">${f('Venue','ev.'+k+'.venue')}</div><div style="grid-column:span 2">${f('Address','ev.'+k+'.addr')}</div></div></div>`).join('')}</div>`}};
 
-const PEOPLE_COLS=[{f:'side',l:'Side',t:'sel',o:['Groom','Bride'],w:'90px'},{f:'role',l:'Role',w:'1.3fr'},{f:'name',l:'Name',w:'1.4fr',p:'Full name'},{f:'phone',l:'Phone / WA',t:'tel',w:'1fr'}];
-V.people={render(){return head('Family <em>&amp; party</em>','Who is who on each side, with phone numbers for the team.',`<input class="search" id="q" placeholder="Search" value="${esc(ui.q)}">${pills(['All','Groom','Bride'],ui.side,'side')}<button class="btn lime" data-act="add" data-m="people">${ico('plus').replace('<svg','<svg width="14" height="14" style="fill:none;stroke:currentColor;stroke-width:2.5"')}Add</button>`)+`<div id="list"></div>`},
-  list(){const rows=S.people.filter(r=>(ui.side==='All'||r.side===ui.side)&&matches(r,ui.q));$('#list').innerHTML=grid('people',PEOPLE_COLS,rows,'No one matches.')}};
+const PEOPLE_COLS=[{f:'role',l:'Role',w:'1.2fr'},{f:'name',l:'Name',w:'1.4fr',p:'Full name'},{f:'phone',l:'Phone / WA',t:'tel',w:'1fr'}];
+function normPeople(){S.people.forEach(p=>{
+  p.role=String(p.role||'').replace(/^(Groom|Bride)'s\s+/,'').replace(/^The (Groom|Bride)$/,'$1');
+})}
+V.people={render(){normPeople();return head('Family <em>&amp; party</em>','Each side has its own list, so there is no need to type who it belongs to. Fill in names and numbers for the team.',`<input class="search" id="q" placeholder="Search" value="${esc(ui.q)}">`)+`<div class="two" id="list" style="align-items:start"></div>`},
+  list(){
+    const side=(sd,nm)=>{const all=S.people.filter(r=>r.side===sd),rows=all.filter(r=>matches(r,ui.q));const named=all.filter(r=>r.name).length;
+      return `<div><div class="sechead" style="margin-top:0"><h2>${esc(nm||sd)}’s side <span class="mono mut" style="font-size:11px">${named}/${all.length} named</span></h2><button class="btn sm lime" data-act="add" data-m="people" data-side="${sd}">+ Add</button></div>${grid('people',PEOPLE_COLS,rows,'No one matches.')}</div>`};
+    $('#list').innerHTML=side('Groom',S.info.groom)+side('Bride',S.info.bride);
+    S.people.forEach(p=>{if((p.role==='Groom'||p.role==='Bride')&&!p.name){const el=$(`[data-m="people"][data-id="${p.id}"][data-f="name"]`);if(el)el.placeholder=(p.role==='Groom'?S.info.groom:S.info.bride)||'Full name'}})}};
 
 V.tasks={render(){
   return head('<em>Tasks</em>','Ideal timeline from your master checklist. Due dates follow the wedding date. Tap the circle to cycle to do, doing and done.',`<input class="search" id="q" placeholder="Search tasks" value="${esc(ui.q)}">${pills(['Open','Overdue','Done','All'],ui.tf,'tf')}`)+`<div id="sum"></div><div id="list"></div>`},
@@ -695,7 +702,7 @@ const A={
   flt(el){ui[el.dataset.n]=el.dataset.v;render()},
   cyc(el){const x=S.check.find(c=>c.id===el.dataset.id);x.st=(x.st+1)%3;save('check');V[cur].list?V[cur].list():render()},
   del(el){const m=el.dataset.m;if(m==='rd'){S.rundown[ui.ev].rows=S.rundown[ui.ev].rows.filter(r=>r.id!==el.dataset.id);save('rundown')}else{S[m]=S[m].filter(r=>r.id!==el.dataset.id);save(m)}toast('Removed');V[cur].list()},
-  add(el){const m=el.dataset.m;const d={people:{side:ui.side==='Bride'?'Bride':'Groom',role:'',name:'',phone:''},vendors:{cat:'',name:'',phone:'',price:0,paid:0,st:'Looking',note:''},hotel:{who:'',name:'',hotel:'',room:'',cin:'',cout:'',brk:''},trans:{who:'',name:'',pax:'',car:'',dest:'',dep:'',arr:''},meals:{when:'',group:'',qty:0},crew:{phase:ui.crew==='All'?'':ui.crew,desk:'',name:'',phone:''}}[m];
+  add(el){const m=el.dataset.m;const d={people:{side:el.dataset.side||'Groom',role:'',name:'',phone:''},vendors:{cat:'',name:'',phone:'',price:0,paid:0,st:'Looking',note:''},hotel:{who:'',name:'',hotel:'',room:'',cin:'',cout:'',brk:''},trans:{who:'',name:'',pax:'',car:'',dest:'',dep:'',arr:''},meals:{when:'',group:'',qty:0},crew:{phase:ui.crew==='All'?'':ui.crew,desk:'',name:'',phone:''}}[m];
     S[m].push({id:uid(),...d});save(m);ui.q='';V[cur].list();const rows=$$('.row:not(.head)');const last=rows[rows.length-1];last&&last.scrollIntoView({block:'center'});last&&last.querySelector('input,select')&&last.querySelector('input,select').focus()},
   addtask(el){const t=prompt2('New task in '+el.dataset.sec,t=>{if(!t)return;S.check.push({id:uid(),sec:el.dataset.sec,t,when:'',st:0});save('check');V.tasks.list()})},
   addguest(){S.guests.unshift({id:uid(),name:'',phone:'',side:'Groom',pax:1,tag:'',table:'',inv:'Not sent',rsvp:'Pending'});save('guests');ui.guestTab='List';ui.q='';render();const f=$('.row:not(.head) input');f&&f.focus()},
