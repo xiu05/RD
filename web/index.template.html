@@ -184,6 +184,27 @@ a.stat:hover{border-color:var(--acc)}
 .sw{width:26px;height:26px;border-radius:50%;border:1px solid rgba(0,0,0,.2);padding:0;display:inline-grid;place-items:center;position:relative;overflow:hidden}
 .sw.add{background:var(--soft);color:var(--mut);font-weight:600;cursor:pointer}
 .sw.add input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.strip{display:flex;gap:2px;overflow-x:auto;padding:4px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.strip .mo{flex:1 0 34px;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:var(--mut);font:500 10px var(--f-m);letter-spacing:.12em;text-transform:uppercase;position:relative;padding:2px 0}
+.strip .col{display:flex;align-items:flex-end;height:44px;width:14px;background:var(--soft)}
+.strip .col b{display:block;width:100%;background:var(--line);position:relative;min-height:2px}
+.strip .col u{display:block;position:absolute;bottom:0;left:0;right:0;background:var(--acc)}
+.strip .mo.now{color:var(--ink);font-weight:600} .strip .mo.now::after{content:"";position:absolute;bottom:-13px;width:100%;height:2px;background:var(--ink)}
+.strip .mo.wed em{position:absolute;top:-8px;font-style:normal;color:var(--bad);font-size:12px}
+.tlw{position:relative}
+.tm{scroll-margin-top:110px;display:grid;grid-template-columns:78px 18px minmax(0,1fr);gap:0 14px;margin-bottom:14px;position:relative}
+.tm::before{content:"";position:absolute;left:calc(78px + 14px + 8px);top:14px;bottom:-14px;width:1px;background:var(--line)}
+.tm:last-child::before{display:none}
+.tm .lab{text-align:right;padding-top:2px}
+.tm .lab b{display:block;font:italic 400 26px/1 var(--f-d)} .tm .lab span{display:block;font:500 10px var(--f-m);letter-spacing:.14em;color:var(--mut)} .tm .lab em{display:block;font:500 10px var(--f-m);letter-spacing:.08em;font-style:normal;color:var(--acc);margin-top:3px}
+.tm .dotc{position:relative;z-index:1;padding-top:8px}
+.tm .dotc i{display:block;width:17px;height:17px;border-radius:50%;background:var(--bg);border:1px solid var(--mut)}
+.tm.past .dotc i{background:var(--mut)} .tm.now .dotc i{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 4px var(--acc-soft)}
+.tm .body{padding:12px 16px}
+.tm .mh{display:flex;justify-content:space-between;gap:8px;font:500 10px var(--f-m);letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.tm .ms{display:flex;gap:10px;align-items:center;padding:7px 8px;margin:4px 0;background:var(--acc-soft);border-left:2px solid var(--acc)}
+.tm .dia{width:9px;height:9px;transform:rotate(45deg);background:var(--acc);flex:none}
+@media (max-width:900px){.tm{grid-template-columns:50px 16px minmax(0,1fr);gap:0 8px}.tm::before{left:calc(50px + 8px + 8px)}.tm .lab b{font-size:20px}}
 @media (max-width:900px){
   .hd .hb{flex-wrap:wrap;gap:0;min-height:0;justify-content:center}
   .logo{width:100%;text-align:center;font-size:28px}
@@ -370,11 +391,11 @@ function grid(mod,cols,rows,empty){
 }
 const matches=(r,q)=>!q||Object.values(r).some(v=>String(v).toLowerCase().includes(q.toLowerCase()));
 const pills=(opts,cur,name)=>`<div class="pills">${opts.map(o=>`<button class="pill" data-act="flt" data-n="${name}" data-v="${esc(o)}" aria-pressed="${o===cur}">${esc(o)}</button>`).join('')}</div>`;
-const ui={q:'',side:'All',rsvp:'All',ev:'rec',stay:'Hotel',crew:'All',vend:'All',guestTab:'List',tf:'Open',packWho:'Groom'};
+const ui={tlf:'All',q:'',side:'All',rsvp:'All',ev:'rec',stay:'Hotel',crew:'All',vend:'All',guestTab:'List',tf:'Open',packWho:'Groom'};
 
 /* ---------- views ---------- */
 const V={};
-const VIEWS=[['home','Home','home'],['event','Event','event'],['mood','Moodboard','mood'],['people','Family','people'],['tasks','Tasks','tasks'],['vendors','Vendors','vendors'],['money','Money','money'],['guests','Guests','guests'],['rundown','Rundown','rundown'],['stay','Stay & eat','stay'],['crew','Crew','crew'],['packing','Packing','packing']];
+const VIEWS=[['home','Home','home'],['event','Event','event'],['mood','Moodboard','mood'],['people','Family','people'],['tasks','Tasks','tasks'],['timeline','Timeline','rundown'],['vendors','Vendors','vendors'],['money','Money','money'],['guests','Guests','guests'],['rundown','Rundown','rundown'],['stay','Stay & eat','stay'],['crew','Crew','crew'],['packing','Packing','packing']];
 const head=(title,sub,right='')=>`<div class="top"><div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}</div><div class="tools">${right}</div></div>`;
 
 const THEMES={burgundy:['#5E1A2C','Burgundy'],forest:['#2E3B24','Forest'],rose:['#8F4F5E','Dusty rose'],midnight:['#1F2B47','Midnight']};
@@ -567,6 +588,48 @@ V.mood={render(){
     $('#list').innerHTML=tabs+pal+(b.items.length?`<div class="masonry">${tiles}</div>`:`<div class="rows"><div class="empty">This board is empty. Add images from your device, or jot down a note.</div></div>`);
   }};
 
+
+/* ---------- timeline overview ---------- */
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mkey=d=>d.getFullYear()*12+d.getMonth();
+V.timeline={render(){
+  ui.tlJump=1;return head('<em>Timeline</em>','The whole plan on one line, month by month, counting down to the wedding. Tasks sit in the month they are due.',pills(['All','Open'],ui.tlf,'tlf'))+`<div id="sum"></div><div id="list"></div>`},
+  list(){
+    const i=S.info,w=toDate(i.date),now=today(),nk=mkey(now);
+    if(!w){$('#list').innerHTML='<div class="rows"><div class="empty">Set your wedding date in <a href="#event">Event</a> to see the timeline.</div></div>';return}
+    const items=[];
+    S.check.forEach(x=>{const d=dueDate(x.when);items.push({k:'t',d,x})});
+    const ms=[['eng','Engagement'],['morn','Morning session'],['holy','Holy Matrimony'],['rec','Wedding reception']].map(([k,n])=>({k:'m',d:toDate(i.ev[k].date),n,t:i.ev[k].time})).filter(m=>m.d);
+    if(!ms.some(m=>+m.d===+w))ms.push({k:'m',d:w,n:'Wedding day',t:''});
+    const dated=items.filter(x=>x.d).concat(ms);
+    const ks=dated.map(x=>mkey(x.d));const lo=Math.min(nk,...ks),hi=Math.max(mkey(w),...ks);
+    const groups=[];for(let k=lo;k<=Math.min(hi,lo+60);k++)groups.push({k,t:[],m:[]});
+    dated.forEach(x=>{const g=groups.find(g=>g.k===mkey(x.d));if(g)(x.k==='t'?g.t:g.m).push(x)});
+    const undated=items.filter(x=>!x.d);
+    const done=S.check.filter(x=>x.st===2).length,tot=S.check.length;
+    const wd=daysTo(i.date);
+    $('#sum').innerHTML=`<div class="sum"><div class="s"><b>${wd==null?'–':wd}</b><span>days to go</span></div><div class="s"><b>${done}/${tot}</b><span>tasks done</span></div><div class="s"><b>${S.check.filter(x=>x.st!==2&&x.d!==null&&(dueDate(x.when)||9e15)<now).length}</b><span>overdue</span></div></div>
+    <div class="strip" role="img" aria-label="Task load per month">${groups.map(g=>{const n=g.t.length,dn=g.t.filter(x=>x.x.st===2).length,od=g.t.some(x=>x.x.st!==2)&&g.k<nk;const mx=Math.max(1,...groups.map(q=>q.t.length));const dd=new Date(Math.floor(g.k/12),g.k%12,1);
+      return `<a class="mo ${g.k===nk?'now':''} ${g.k===mkey(w)?'wed':''}" href="#tl${g.k}" data-act="jump" data-k="${g.k}"><i class="col"><b style="height:${n/mx*100}%"><u style="height:${n?dn/n*100:0}%"></u></b></i><span>${MON[dd.getMonth()]}</span>${g.k===mkey(w)?'<em>♥</em>':''}</a>`}).join('')}</div>`;
+    let out='';
+    groups.forEach(g=>{
+      const open=ui.tlf==='Open';let tasks=g.t.sort((a,b)=>a.d-b.d);const all=tasks;if(open)tasks=tasks.filter(x=>x.x.st!==2);
+      if(!tasks.length&&!g.m.length&&(open||!all.length))return;
+      const dd=new Date(Math.floor(g.k/12),g.k%12,1),dn=all.filter(x=>x.x.st===2).length;
+      const rel=g.k===nk?'This month':g.k<nk?`${nk-g.k} mo ago`:`in ${g.k-nk} mo`;
+      const tm=mkey(w)-g.k;const past=g.k<nk;
+      out+=`<div class="tm ${g.k===nk?'now':past?'past':''}" id="tl${g.k}"><div class="lab"><b>${MON[dd.getMonth()]}</b><span>${dd.getFullYear()}</span><em>${tm>0?`T−${tm} mo`:tm===0?'Wedding month':`+${-tm} mo`}</em></div><div class="dotc"><i></i></div>
+      <div class="card body"><div class="mh"><span class="mut">${rel}</span>${all.length?`<span class="chip ${dn===all.length?'ok':''}">${dn}/${all.length} done</span>`:''}</div>
+      ${g.m.sort((a,b)=>a.d-b.d).map(m=>`<div class="ms"><span class="dia"></span><span class="t"><b>${esc(m.n)}</b> · ${m.d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}${m.t?' · '+esc(m.t):''}</span></div>`).join('')}
+      ${tasks.map(({x,d})=>{const late=x.st!==2&&d<now;return `<div class="li"><button class="stbtn" data-act="cyc" data-id="${x.id}" data-s="${x.st}" aria-label="Change status">${['','…','✓'][x.st]}</button><span class="t" style="${x.st===2?'text-decoration:line-through;color:var(--mut)':''}">${esc(x.t)} <span class="mut" style="font-size:12px">· ${esc(x.sec)}</span></span><span class="chip ${late?'bad':''}">${d.getDate()} ${MON[d.getMonth()]}</span></div>`}).join('')||(g.m.length?'':'<div class="mut" style="padding:4px 0">No tasks this month.</div>')}
+      </div></div>`;
+    });
+    if(undated.length&&!open||undated.some(x=>x.x.st!==2)){const u=open?undated.filter(x=>x.x.st!==2):undated;
+      out+=`<div class="tm"><div class="lab"><b>—</b><span>Any time</span></div><div class="dotc"><i></i></div><div class="card body"><div class="mh"><span class="mut">No fixed date</span></div>${u.map(x=>`<div class="li"><button class="stbtn" data-act="cyc" data-id="${x.id}" data-s="${x.st}" aria-label="Change status">${['','…','✓'][x.st]}</button><span class="t">${esc(x.t)} <span class="mut" style="font-size:12px">· ${esc(x.sec)}</span></span></div>`).join('')}</div></div>`}
+    $('#list').innerHTML=`<div class="tlw">${out||'<div class="rows"><div class="empty">Nothing to show.</div></div>'}</div>`;
+    if(ui.tlJump){ui.tlJump=0;const t=document.getElementById('tl'+nk);if(t&&t.previousElementSibling)setTimeout(()=>t.scrollIntoView({block:'start'}),0)}
+  }};
+
 /* ---------- router / render ---------- */
 let cur='home';
 function route(){const h=(location.hash||'#home').slice(1);cur=V[h]?h:'home'}
@@ -632,6 +695,7 @@ const A={
   swcopy(el){const c=el.dataset.c;navigator.clipboard.writeText(c).then(()=>toast('Copied '+c),()=>toast(c))},
   swdel(el){board().palette.splice(+el.dataset.i,1);save('mood');V.mood.list()},
   lightbox(el){const o=document.createElement('div');o.className='ov';o.id='ov';o.innerHTML=`<img src="${esc(el.dataset.src)}" alt="" style="max-width:100%;max-height:90vh;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5)">`;o.addEventListener('click',closeModal);$('#layer').appendChild(o)},
+  jump(el){const t=document.getElementById('tl'+el.dataset.k);if(t){t.scrollIntoView({behavior:'smooth',block:'start'})}},
   flt(el){ui[el.dataset.n]=el.dataset.v;render()},
   cyc(el){const x=S.check.find(c=>c.id===el.dataset.id);x.st=(x.st+1)%3;save('check');V[cur].list?V[cur].list():render()},
   del(el){const m=el.dataset.m;if(m==='rd'){S.rundown[ui.ev].rows=S.rundown[ui.ev].rows.filter(r=>r.id!==el.dataset.id);save('rundown')}else{S[m]=S[m].filter(r=>r.id!==el.dataset.id);save(m)}toast('Removed');V[cur].list()},
